@@ -113,6 +113,61 @@ node server.js
 3. Copy to backend `.env` as `EXPO_ACCESS_TOKEN`
 
 ---
+## 🔌 API Endpoint Documentation
+
+### POST /send-notification
+
+Sends a push notification to a user.
+
+**Request:**
+Method: POST
+URL: http://10.95.112.214:3000/send-notification
+Content-Type: application/json
+**Request Body:**
+{
+"userId": "19c0d44a-fa2d-4692-8e60-866d943f0ad3"
+}
+
+**Success Response (200):**
+{
+"success": true,
+"data": {
+"id": "ExponentPushTicket[...]",
+"status": "ok"
+}
+}
+
+**Error Response (404):**
+{
+"error": "User not found in Firestore"
+}
+
+
+
+---
+
+### Testing with Postman
+
+1. **Create new request**
+   - Method: `POST`
+   - URL: `http://10.95.112.214:3000/send-notification`
+
+2. **Headers tab**
+   - Key: `Content-Type`
+   - Value: `application/json`
+
+3. **Body tab** (select "raw" and "JSON")
+{
+"userId": "19c0d44a-fa2d-4692-8e60-866d943f0ad3"
+}
+
+
+
+4. **Click Send**
+
+---
+
+
  
 
 
