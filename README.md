@@ -65,20 +65,37 @@ Build a demo Expo app that demonstrates **end-to-end notification functionality*
 cd my-notification-app/Frontend
 npm install
 ```
-### Step 2: Create .env file
+### Step 2: Environment Configuration
+- All environment variables are  stored inside app.json → extra, like this:
 ```bash
-EXPO_PUBLIC_FIREBASE_API_KEY=API_KEY
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=AUTH_DOMAIN
-EXPO_PUBLIC_FIREBASE_PROJECT_ID=PROJECT_ID
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=STORAGE_BUCKET
-EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=MESSAGING_SENDER
-EXPO_PUBLIC_FIREBASE_APP_ID=APP_ID
-EXPO_PUBLIC_EXPO_PROJECT_ID=PROJECT_ID
-EXPO_PUBLIC_BACKEND_URL=BACKEND_URL
+"extra": {
+  "eas": {
+    "projectId": "YOUR_EAS_PROJECT_ID"
+  },
+  "EXPO_PUBLIC_FIREBASE_API_KEY": "YOUR_FIREBASE_API_KEY",
+  "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "YOUR_FIREBASE_AUTH_DOMAIN",
+  "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "YOUR_FIREBASE_PROJECT_ID",
+  "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "YOUR_FIREBASE_STORAGE_BUCKET",
+  "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+  "EXPO_PUBLIC_FIREBASE_APP_ID": "YOUR_FIREBASE_APP_ID",
+  "EXPO_PUBLIC_EXPO_PROJECT_ID": "YOUR_EXPO_PROJECT_ID",
+  "EXPO_PUBLIC_BACKEND_URL": "YOUR_BACKEND_URL"
+}
+
+
 ```
+- In the frontend code, these values are accessed using:
+  ```bash
+  import Constants from 'expo-constants';
+  ```
+  ```bash
+  const BACKEND_URL = Constants.expoConfig.extra.EXPO_PUBLIC_BACKEND_URL;
+  ```
 ### Step 3: Start the app
 ```bash
-npx expo start
+npx expo start --dev-client
+or
+npx expo start  -> press s to access expo go mode
 ```
 ## Backend Setup
 ```bash
@@ -182,6 +199,65 @@ Content-Type: application/json
 4. **Click Send**
 
 ---
+### On Production/Build
+- 🌐 Ngrok Setup (Backend Tunneling)
+#### install ngrok
+```bash
+npm install -g ngrok
+
+```
+#### Authenticate Ngrok
+
+-Ngrok requires an authentication token linked to your account.
+
+-Sign up or log in to ngrok.com. Copy your Auth Token from the dashboard.
+
+-Run this command in your terminal:
+```bash
+
+ngrok config add-authtoken YOUR_NGROK_AUTH_TOKEN
+```
+#### 1️⃣ Start the Node.js Server
+
+In your Backend directory, start the Express server:
+```bash
+node server.js
+```
+#### 2️⃣ Expose Localhost via Ngrok
+
+Run this command to expose your backend (port 3000):
+```bash
+npx ngrok http 3000
+```
+You’ll see output like this:
+```bash 
+Forwarding  https://abcd1234.ngrok-free.app -> http://localhost:3000
+```
+
+
+#### 3️⃣ Update Frontend Config
+
+Copy the generated HTTPS URL and paste it into your frontend app.json → extra section:
+```bash 
+
+"EXPO_PUBLIC_BACKEND_URL": "https://abcd1234.ngrok-free.app"
+```
+
+
+This allows your Expo app (running on a physical device or emulator) to make network requests to your locally running backend.
+
+#### 4️⃣ Verify the Tunnel
+
+Open the following URL in your browser:
+```bash 
+https://abcd1234.ngrok-free.app/
+```
+If it shows:
+```bash
+Cannot GET /
+```
+✅ That’s expected — it confirms your backend is live and publicly accessible through Ngrok.
+
 
 
  
