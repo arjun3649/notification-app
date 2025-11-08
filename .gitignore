@@ -6,6 +6,7 @@ dist/
 build/
 
 # Environment
+google-services.json
 .env
 .env.local
 .env.*.local

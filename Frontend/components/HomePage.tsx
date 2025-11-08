@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
 import { saveUserToFirestore } from '../firebase/User';
 import React, { useEffect, useState } from 'react';
+import Constants from 'expo-constants';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 // Configure notification handler
@@ -19,10 +20,17 @@ Notifications.setNotificationHandler({
 });
 
 export default function HomePage() {
-  const [userId, setUserId] = useState<string>('');
+  const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(true);
   const [notificationSent, setNotificationSent] = useState(false);
-  const [pushToken, setPushToken] = useState<string>('');
+  const [pushToken, setPushToken] = useState('');
+  const [debugLog, setDebugLog] = useState('');
+
+  // ✅ Pull all env values from app.json
+  const EXTRA = Constants.expoConfig.extra || {};
+  const BACKEND_URL = EXTRA.EXPO_PUBLIC_BACKEND_URL;
+  const PROJECT_ID = EXTRA.EXPO_PUBLIC_EXPO_PROJECT_ID;
+  const FIREBASE_APP_ID = EXTRA.EXPO_PUBLIC_FIREBASE_APP_ID;
 
   useEffect(() => {
     initializeUser();
@@ -37,13 +45,26 @@ export default function HomePage() {
       }
       setUserId(storedUserId);
 
+      setDebugLog((prev) =>
+        prev +
+        `\nEXPO_PUBLIC_BACKEND_URL: ${BACKEND_URL}` +
+        `\nEXPO_PUBLIC_EXPO_PROJECT_ID: ${PROJECT_ID}` +
+        `\nEXPO_PUBLIC_FIREBASE_APP_ID: ${FIREBASE_APP_ID}` +
+        `\nUserId: ${storedUserId}`
+      );
+
       const token = await requestNotificationPermissions();
       if (token) {
         setPushToken(token);
         await saveUserToFirestore(storedUserId, token);
+        setDebugLog((prev) => prev + `\nPushToken: ${token}`);
       }
     } catch (error) {
-      console.error('Error initializing user:', error);
+      setDebugLog((prev) =>
+        prev +
+        `\nError initializing user: ${error.message}` +
+        `\nError object: ${JSON.stringify(error)}`
+      );
     } finally {
       setLoading(false);
     }
@@ -52,20 +73,27 @@ export default function HomePage() {
   const requestNotificationPermissions = async () => {
     try {
       const { status } = await Notifications.requestPermissionsAsync();
-
       if (status !== 'granted') {
-        console.warn('Notification permission denied');
+        setDebugLog((prev) => prev + '\nNotification permission denied');
         return null;
       }
 
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PUBLIC_EXPO_PROJECT_ID,
-      });
+      setDebugLog(
+        (prev) => prev + `\nTrying getExpoPushTokenAsync with projectId: ${PROJECT_ID}`
+      );
 
-      console.log('Push token:', token.data);
+      const token = await Notifications.getExpoPushTokenAsync({
+        projectId: PROJECT_ID,
+      });
+      setDebugLog((prev) => prev + `\nPush token: ${token.data}`);
       return token.data;
     } catch (error) {
-      console.error('Error getting push token:', error);
+      setDebugLog(
+        (prev) =>
+          prev +
+          `\nError getting push token: ${error.message}` +
+          `\nError object: ${JSON.stringify(error)}`
+      );
       return null;
     }
   };
@@ -73,18 +101,37 @@ export default function HomePage() {
   const handleSendNotification = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setNotificationSent(true);
+    setDebugLog((prev) => prev + '\nSending notification...');
+    setDebugLog(
+      (prev) =>
+        prev + `\nAbout to POST to: ${BACKEND_URL}/send-notification (userId: ${userId})`
+    );
+    console.log('About to POST to:', `${BACKEND_URL}/send-notification`, 'with userId:', userId);
 
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/send-notification`, {
+      const response = await fetch(`${BACKEND_URL}/send-notification`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
       });
 
+      if (!response.ok) {
+        setDebugLog((prev) => prev + `\nServer error: ${response.status}`);
+        console.error('Server response not OK', response.status);
+        return;
+      }
+
       const data = await response.json();
+      setDebugLog((prev) => prev + `\nNotification response: ${JSON.stringify(data)}`);
       console.log('Notification response:', data);
     } catch (error) {
-      console.error('Error sending notification:', error);
+      setDebugLog(
+        (prev) =>
+          prev +
+          `\nError sending notification: ${error.message}` +
+          `\nError object: ${JSON.stringify(error)}`
+      );
+      console.error('Error (object):', error);
     }
 
     setTimeout(() => setNotificationSent(false), 3000);
@@ -131,7 +178,9 @@ export default function HomePage() {
           {/* Status Card */}
           <View className="mb-6 flex-row items-center rounded-3xl border border-white/20 bg-white/10 p-5">
             <View
-              className={`mr-3 h-3 w-3 rounded-full ${notificationSent ? 'bg-green-400' : 'bg-yellow-400'}`}
+              className={`mr-3 h-3 w-3 rounded-full ${
+                notificationSent ? 'bg-green-400' : 'bg-yellow-400'
+              }`}
             />
             <Text className="text-sm text-white">
               {notificationSent
@@ -146,7 +195,8 @@ export default function HomePage() {
               colors={['#FF416C', '#FF4B2B']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={{ borderRadius: 16 }}>
+              style={{ borderRadius: 16 }}
+            >
               <View className="items-center rounded-2xl p-5 shadow-2xl">
                 <Text className="text-lg font-bold tracking-wide text-white">
                   🚀 Send Test Notification
@@ -154,6 +204,13 @@ export default function HomePage() {
               </View>
             </LinearGradient>
           </TouchableOpacity>
+
+          {/* Debug Log */}
+          <View className="mt-6 bg-black/30 rounded p-4">
+            <ScrollView style={{ maxHeight: 350 }}>
+              <Text className="text-xs text-white font-mono">{debugLog}</Text>
+            </ScrollView>
+          </View>
 
           {/* Feature Pills */}
           <View className="mt-8 flex-row flex-wrap gap-3">

@@ -3,7 +3,9 @@
     "jsx": "react-native",
     "target": "ES2020",
     "module": "esnext",
-    "lib": ["ES2020"],
+    "lib": [
+      "ES2020"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -13,5 +15,6 @@
     "noEmit": true,
     "isolatedModules": true,
     "moduleResolution": "node"
-  }
+  },
+  "extends": "expo/tsconfig.base"
 }
