@@ -113,6 +113,22 @@ node server.js
 3. Copy to backend `.env` as `EXPO_ACCESS_TOKEN`
 
 ---
+## 📸 Firestore Database Screenshot
+
+The user data is successfully stored in Firestore with the following structure:
+
+**Collection:** `users`
+**Document ID:** `19c0d44a-fa2d-4692-8e60-866d943f0ad3` (userId)
+
+**Fields:**
+- `createdAt`: November 8, 2025 at 6:18:31 AM UTC+5:30 (timestamp)
+- `expoPushToken`: "ExponentPushToken[A1P8jqHApnssTpzZaVlK_E]" (string)
+- `name`: "Notification User" (string)
+- `userId`: "19c0d44a-fa2d-4692-8e60-866d943f0ad3" (string)
+
+<img width="1889" height="920" alt="image" src="https://github.com/user-attachments/assets/daa92ef9-a055-4377-87f6-47fe95eabbe0" />
+
+
 ## 🔌 API Endpoint Documentation
 
 ### POST /send-notification
